@@ -23,6 +23,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import type { GoodsInReceiptWithItems, GoodsInItem } from "../types";
 import { PlusIcon, TrashIcon } from "@phosphor-icons/react";
@@ -53,6 +60,7 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
         receipt.items.map((item) => ({
           item_name: item.item_name,
           quantity: item.quantity,
+          unit: item.unit || "Kg",
           unit_price: item.unit_price,
           total: item.total,
         }))
@@ -68,7 +76,7 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
   const addItem = () => {
     setItems([
       ...items,
-      { item_name: "", quantity: 0, unit_price: 0, total: 0 },
+      { item_name: "", quantity: 0, unit: "Kg", unit_price: 0, total: 0 },
     ]);
   };
 
@@ -194,6 +202,7 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
                       <TableRow>
                         <TableHead className="py-4">Item Name</TableHead>
                         <TableHead className="py-4">Quantity</TableHead>
+                        <TableHead className="py-4">Unit</TableHead>
                         <TableHead className="py-4">Unit Price</TableHead>
                         <TableHead className="py-4">Total</TableHead>
                         <TableHead className="w-[60px] py-4"></TableHead>
@@ -231,6 +240,28 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
                               disabled={isPending}
                               className="h-10"
                             />
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Select
+                              value={item.unit || "Kg"}
+                              onValueChange={(value) =>
+                                updateItem(index, "unit", value)
+                              }
+                              disabled={isPending}
+                            >
+                              <SelectTrigger className="h-10">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Kg">Kg</SelectItem>
+                                <SelectItem value="Bucket">Bucket</SelectItem>
+                                <SelectItem value="Packet">Packet</SelectItem>
+                                <SelectItem value="Piece">Piece</SelectItem>
+                                <SelectItem value="Box">Box</SelectItem>
+                                <SelectItem value="Litre">Litre</SelectItem>
+                                <SelectItem value="Metre">Metre</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell className="py-4">
                             <Input

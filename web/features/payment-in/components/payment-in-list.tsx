@@ -37,6 +37,11 @@ export function PaymentInList() {
         cell: ({ row }) => `₹${row.original.amount.toFixed(2)}`,
       },
       {
+        accessorKey: 'payment_mode',
+        header: 'Payment Mode',
+        cell: ({ row }) => row.original.payment_mode || 'Cash',
+      },
+      {
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (

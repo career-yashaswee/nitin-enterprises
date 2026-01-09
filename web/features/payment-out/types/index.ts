@@ -4,6 +4,7 @@ export interface PaymentOut {
   account_id: string;
   amount: number;
   date: string;
+  payment_mode: string;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -26,6 +27,7 @@ export interface CreatePaymentOutInput {
   account_id: string;
   amount: number;
   date: string;
+  payment_mode?: string;
   notes?: string;
 }
 
@@ -35,5 +37,6 @@ export interface UpdatePaymentOutInput {
   account_id?: string;
   amount?: number;
   date?: string;
+  payment_mode?: string;
   notes?: string;
 }

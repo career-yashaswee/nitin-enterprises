@@ -13,6 +13,7 @@ export interface GoodsInItem {
   receipt_id: string;
   item_name: string;
   quantity: number;
+  unit: string;
   unit_price: number;
   total: number;
   created_at: string;

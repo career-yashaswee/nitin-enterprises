@@ -27,6 +27,7 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
   const [accountId, setAccountId] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentMode, setPaymentMode] = useState('Cash');
   const [notes, setNotes] = useState('');
 
   const { data: goodsInReceipts } = useGoodsIn();
@@ -40,12 +41,14 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
       setAccountId(payment.account_id);
       setAmount(payment.amount.toString());
       setDate(payment.date);
+      setPaymentMode(payment.payment_mode || 'Cash');
       setNotes(payment.notes || '');
     } else {
       setGoodsInReceiptId('');
       setAccountId('');
       setAmount('');
       setDate(new Date().toISOString().split('T')[0]);
+      setPaymentMode('Cash');
       setNotes('');
     }
   }, [payment, open]);
@@ -82,6 +85,7 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
           account_id: accountId,
           amount: parseFloat(amount),
           date,
+          payment_mode: paymentMode,
           notes: notes || undefined,
         });
         toast.success('Payment Out updated successfully');
@@ -91,6 +95,7 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
           account_id: accountId,
           amount: parseFloat(amount),
           date,
+          payment_mode: paymentMode,
           notes: notes || undefined,
         });
         toast.success('Payment Out created successfully');
@@ -216,6 +221,25 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
                   disabled={isPending}
                 />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="payment_mode">Payment Mode *</Label>
+              <Select
+                value={paymentMode}
+                onValueChange={setPaymentMode}
+                disabled={isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="UPI">UPI</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Cheque">Cheque</SelectItem>
+                  <SelectItem value="Card">Card</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Notes</Label>

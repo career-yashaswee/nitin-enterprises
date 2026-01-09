@@ -89,6 +89,7 @@ export const goodsInService = {
         receipt_id: receipt.id,
         item_name: item.item_name,
         quantity: item.quantity,
+        unit: item.unit || "Kg",
         unit_price: item.unit_price,
         total: item.total,
       }));
@@ -130,6 +131,7 @@ export const goodsInService = {
           receipt_id: id,
           item_name: item.item_name,
           quantity: item.quantity,
+          unit: item.unit || "Kg",
           unit_price: item.unit_price,
           total: item.total,
         }));
