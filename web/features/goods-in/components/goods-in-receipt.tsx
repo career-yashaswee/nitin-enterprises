@@ -10,7 +10,11 @@ interface GoodsInReceiptProps {
   receiptId?: string;
 }
 
-export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptProps) {
+export function GoodsInReceipt({
+  receipt,
+  payments,
+  receiptId,
+}: GoodsInReceiptProps) {
   const totalAmount = receipt.total_amount;
   const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
   const remainingAmount = totalAmount - totalPaid;
@@ -29,12 +33,15 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
       {/* Header */}
       <div
         className="mb-8 text-center pb-6"
-        style={{ 
+        style={{
           borderBottom: "3px solid #1f2937",
-          background: "linear-gradient(to right, #f9fafb, #ffffff, #f9fafb)"
+          background: "linear-gradient(to right, #f9fafb, #ffffff, #f9fafb)",
         }}
       >
-        <h1 className="text-4xl font-bold mb-3" style={{ color: "#000000", letterSpacing: "1px" }}>
+        <h1
+          className="text-4xl font-bold mb-3"
+          style={{ color: "#000000", letterSpacing: "1px" }}
+        >
           GOODS IN RECEIPT
         </h1>
         <p className="text-xl font-semibold mb-4" style={{ color: "#1f2937" }}>
@@ -42,16 +49,25 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
         </p>
         <div className="mt-4 pt-4" style={{ borderTop: "1px solid #e5e7eb" }}>
           <p className="text-sm font-medium" style={{ color: "#6b7280" }}>
-            Receipt ID: <span style={{ color: "#000000", fontFamily: "monospace" }}>{receipt.id.slice(0, 8).toUpperCase()}</span>
+            Receipt ID:{" "}
+            <span style={{ color: "#000000", fontFamily: "monospace" }}>
+              {receipt.id.slice(0, 8).toUpperCase()}
+            </span>
           </p>
         </div>
       </div>
 
       {/* Receipt Details */}
-      <div className="mb-8 space-y-4 p-4 rounded-lg" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+      <div
+        className="mb-8 space-y-4 p-4 rounded-lg"
+        style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
+      >
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-xs font-medium mb-1" style={{ color: "#6b7280", textTransform: "uppercase" }}>
+            <p
+              className="text-xs font-medium mb-1"
+              style={{ color: "#6b7280", textTransform: "uppercase" }}
+            >
               Account Name
             </p>
             <p className="text-lg font-bold" style={{ color: "#000000" }}>
@@ -59,7 +75,10 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-medium mb-1" style={{ color: "#6b7280", textTransform: "uppercase" }}>
+            <p
+              className="text-xs font-medium mb-1"
+              style={{ color: "#6b7280", textTransform: "uppercase" }}
+            >
               Date
             </p>
             <p className="text-lg font-bold" style={{ color: "#000000" }}>
@@ -121,7 +140,12 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
           </thead>
           <tbody>
             {receipt.items.map((item, index) => (
-              <tr key={item.id || index} style={{ backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb" }}>
+              <tr
+                key={item.id || index}
+                style={{
+                  backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb",
+                }}
+              >
                 <td
                   className="px-4 py-3 font-medium"
                   style={{ border: "1px solid #e5e7eb", color: "#000000" }}
@@ -162,9 +186,9 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
       <div className="mb-8 text-right">
         <div
           className="inline-block px-8 py-4 rounded-lg"
-          style={{ 
+          style={{
             backgroundColor: "#1f2937",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           }}
         >
           <p className="text-2xl font-bold" style={{ color: "#ffffff" }}>
@@ -187,7 +211,10 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
           </h2>
           <table
             className="w-full border-collapse rounded-lg overflow-hidden"
-            style={{ border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)" }}
+            style={{
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+            }}
           >
             <thead>
               <tr style={{ backgroundColor: "#1f2937" }}>
@@ -219,7 +246,12 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
             </thead>
             <tbody>
               {payments.map((payment, index) => (
-                <tr key={payment.id || index} style={{ backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb" }}>
+                <tr
+                  key={payment.id || index}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb",
+                  }}
+                >
                   <td
                     className="px-4 py-3"
                     style={{ border: "1px solid #e5e7eb", color: "#000000" }}
@@ -254,17 +286,24 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
       {/* Summary */}
       <div
         className="mt-8 pt-6 rounded-lg p-6"
-        style={{ 
+        style={{
           borderTop: "3px solid #1f2937",
           backgroundColor: "#f9fafb",
-          border: "2px solid #e5e7eb"
+          border: "2px solid #e5e7eb",
         }}
       >
         <div className="flex justify-end space-x-12 text-lg">
           <div className="text-right space-y-2">
-            <p className="font-medium" style={{ color: "#6b7280" }}>Total Amount:</p>
-            <p className="font-medium" style={{ color: "#6b7280" }}>Total Paid:</p>
-            <p className="font-bold text-2xl mt-4 pt-2" style={{ color: "#000000", borderTop: "2px solid #d1d5db" }}>
+            <p className="font-medium" style={{ color: "#6b7280" }}>
+              Total Amount:
+            </p>
+            <p className="font-medium" style={{ color: "#6b7280" }}>
+              Total Paid:
+            </p>
+            <p
+              className="font-bold text-2xl mt-4 pt-2"
+              style={{ color: "#000000", borderTop: "2px solid #d1d5db" }}
+            >
               Remaining Amount:
             </p>
           </div>
@@ -275,7 +314,10 @@ export function GoodsInReceipt({ receipt, payments, receiptId }: GoodsInReceiptP
             <p className="font-bold text-lg" style={{ color: "#000000" }}>
               ₹{totalPaid.toFixed(2)}
             </p>
-            <p className="font-bold text-2xl mt-4 pt-2" style={{ color: "#dc2626", borderTop: "2px solid #d1d5db" }}>
+            <p
+              className="font-bold text-2xl mt-4 pt-2"
+              style={{ color: "#dc2626", borderTop: "2px solid #d1d5db" }}
+            >
               ₹{remainingAmount.toFixed(2)}
             </p>
           </div>
