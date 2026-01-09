@@ -52,3 +52,11 @@ export function useDeletePaymentOut() {
     },
   });
 }
+
+export function usePaymentOutByGoodsInReceiptId(goodsInReceiptId: string) {
+  return useQuery({
+    queryKey: ['payment-out', 'by-goods-in-receipt', goodsInReceiptId],
+    queryFn: () => paymentOutService.getByGoodsInReceiptId(goodsInReceiptId),
+    enabled: !!goodsInReceiptId,
+  });
+}

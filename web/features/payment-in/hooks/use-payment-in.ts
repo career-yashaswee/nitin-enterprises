@@ -52,3 +52,11 @@ export function useDeletePaymentIn() {
     },
   });
 }
+
+export function usePaymentInByGoodsOutReceiptId(goodsOutReceiptId: string) {
+  return useQuery({
+    queryKey: ['payment-in', 'by-goods-out-receipt', goodsOutReceiptId],
+    queryFn: () => paymentInService.getByGoodsOutReceiptId(goodsOutReceiptId),
+    enabled: !!goodsOutReceiptId,
+  });
+}

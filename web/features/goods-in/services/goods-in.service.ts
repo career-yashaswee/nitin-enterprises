@@ -1,31 +1,33 @@
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from "@/lib/supabase/client";
 import type {
   GoodsInReceipt,
   GoodsInItem,
   GoodsInReceiptWithItems,
   CreateGoodsInReceiptInput,
   UpdateGoodsInReceiptInput,
-} from '../types';
+} from "../types";
 
 export const goodsInService = {
   async getAll(): Promise<GoodsInReceiptWithItems[]> {
     const { data: receipts, error } = await supabase
-      .from('goods_in_receipts')
-      .select(`
+      .from("goods_in_receipts")
+      .select(
+        `
         *,
         account:accounts(id, name)
-      `)
-      .order('created_at', { ascending: false });
+      `
+      )
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
     const receiptsWithItems = await Promise.all(
       (receipts || []).map(async (receipt) => {
         const { data: items } = await supabase
-          .from('goods_in_items')
-          .select('*')
-          .eq('receipt_id', receipt.id)
-          .order('created_at');
+          .from("goods_in_items")
+          .select("*")
+          .eq("receipt_id", receipt.id)
+          .order("created_at");
 
         return {
           ...receipt,
@@ -39,22 +41,24 @@ export const goodsInService = {
 
   async getById(id: string): Promise<GoodsInReceiptWithItems | null> {
     const { data: receipt, error } = await supabase
-      .from('goods_in_receipts')
-      .select(`
+      .from("goods_in_receipts")
+      .select(
+        `
         *,
         account:accounts(id, name)
-      `)
-      .eq('id', id)
+      `
+      )
+      .eq("id", id)
       .single();
 
     if (error) throw error;
     if (!receipt) return null;
 
     const { data: items } = await supabase
-      .from('goods_in_items')
-      .select('*')
-      .eq('receipt_id', id)
-      .order('created_at');
+      .from("goods_in_items")
+      .select("*")
+      .eq("receipt_id", id)
+      .order("created_at");
 
     return {
       ...receipt,
@@ -62,10 +66,12 @@ export const goodsInService = {
     };
   },
 
-  async create(input: CreateGoodsInReceiptInput): Promise<GoodsInReceiptWithItems> {
+  async create(
+    input: CreateGoodsInReceiptInput
+  ): Promise<GoodsInReceiptWithItems> {
     // Create receipt
     const { data: receipt, error: receiptError } = await supabase
-      .from('goods_in_receipts')
+      .from("goods_in_receipts")
       .insert({
         account_id: input.account_id,
         date: input.date,
@@ -75,7 +81,7 @@ export const goodsInService = {
       .single();
 
     if (receiptError) throw receiptError;
-    if (!receipt) throw new Error('Failed to create receipt');
+    if (!receipt) throw new Error("Failed to create receipt");
 
     // Create items
     if (input.items.length > 0) {
@@ -88,7 +94,7 @@ export const goodsInService = {
       }));
 
       const { error: itemsError } = await supabase
-        .from('goods_in_items')
+        .from("goods_in_items")
         .insert(itemsToInsert);
 
       if (itemsError) throw itemsError;
@@ -98,15 +104,17 @@ export const goodsInService = {
     return this.getById(receipt.id) as Promise<GoodsInReceiptWithItems>;
   },
 
-  async update(input: UpdateGoodsInReceiptInput): Promise<GoodsInReceiptWithItems> {
+  async update(
+    input: UpdateGoodsInReceiptInput
+  ): Promise<GoodsInReceiptWithItems> {
     const { id, items, ...updateData } = input;
 
     // Update receipt
     if (Object.keys(updateData).length > 0) {
       const { error } = await supabase
-        .from('goods_in_receipts')
+        .from("goods_in_receipts")
         .update({ ...updateData, updated_at: new Date().toISOString() })
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
     }
@@ -114,7 +122,7 @@ export const goodsInService = {
     // Update items if provided
     if (items !== undefined) {
       // Delete existing items
-      await supabase.from('goods_in_items').delete().eq('receipt_id', id);
+      await supabase.from("goods_in_items").delete().eq("receipt_id", id);
 
       // Insert new items
       if (items.length > 0) {
@@ -126,7 +134,9 @@ export const goodsInService = {
           total: item.total,
         }));
 
-        const { error } = await supabase.from('goods_in_items').insert(itemsToInsert);
+        const { error } = await supabase
+          .from("goods_in_items")
+          .insert(itemsToInsert);
         if (error) throw error;
       }
     }
@@ -136,7 +146,10 @@ export const goodsInService = {
 
   async delete(id: string): Promise<void> {
     // Items will be deleted via CASCADE
-    const { error } = await supabase.from('goods_in_receipts').delete().eq('id', id);
+    const { error } = await supabase
+      .from("goods_in_receipts")
+      .delete()
+      .eq("id", id);
     if (error) throw error;
   },
 };

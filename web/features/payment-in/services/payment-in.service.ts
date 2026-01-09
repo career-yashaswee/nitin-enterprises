@@ -90,4 +90,19 @@ export const paymentInService = {
     const { error } = await supabase.from('payment_in').delete().eq('id', id);
     if (error) throw error;
   },
+
+  async getByGoodsOutReceiptId(goodsOutReceiptId: string): Promise<PaymentInWithRelations[]> {
+    const { data, error } = await supabase
+      .from('payment_in')
+      .select(`
+        *,
+        goods_out_receipt:goods_out_receipts(id, date, total_amount),
+        account:accounts(id, name)
+      `)
+      .eq('goods_out_receipt_id', goodsOutReceiptId)
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
 };

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import type { GoodsOutReceiptWithItems } from '../types';
 import { PencilIcon, TrashIcon } from '@phosphor-icons/react';
 import { format } from 'date-fns';
+import { GoodsOutPrint } from './goods-out-print';
 
 export function GoodsOutList() {
   const { data: receipts, isLoading } = useGoodsOut();
@@ -46,6 +47,7 @@ export function GoodsOutList() {
         header: 'Actions',
         cell: ({ row }) => (
           <div className="flex gap-2">
+            <GoodsOutPrint receipt={row.original} />
             <Button
               variant="ghost"
               size="icon"

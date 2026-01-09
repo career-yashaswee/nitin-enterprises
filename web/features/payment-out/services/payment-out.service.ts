@@ -91,4 +91,19 @@ export const paymentOutService = {
     const { error } = await supabase.from('payment_out').delete().eq('id', id);
     if (error) throw error;
   },
+
+  async getByGoodsInReceiptId(goodsInReceiptId: string): Promise<PaymentOutWithRelations[]> {
+    const { data, error } = await supabase
+      .from('payment_out')
+      .select(`
+        *,
+        goods_in_receipt:goods_in_receipts(id, date, total_amount),
+        account:accounts(id, name)
+      `)
+      .eq('goods_in_receipt_id', goodsInReceiptId)
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
 };

@@ -130,7 +130,7 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{receipt ? 'Edit Goods Out Receipt' : 'Create Goods Out Receipt'}</DialogTitle>
           <DialogDescription>
@@ -138,8 +138,8 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-6 py-6">
+            <div className="grid grid-cols-2 gap-6">
               <AccountCombobox
                 value={accountId}
                 onValueChange={setAccountId}
@@ -148,7 +148,7 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
                 required
                 placeholder="Search accounts..."
               />
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="date">Date *</Label>
                 <Input
                   id="date"
@@ -157,58 +157,61 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
                   onChange={(e) => setDate(e.target.value)}
                   required
                   disabled={isPending}
+                  className="h-10"
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={isPending}
-                rows={2}
+                rows={4}
+                className="min-h-[100px]"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Items *</Label>
+                <Label className="text-base">Items *</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={isPending}>
                   <PlusIcon className="size-4" />
                   Add Item
                 </Button>
               </div>
               {items.length > 0 && (
-                <div className="border rounded-md">
+                <div className="border rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Item Name</TableHead>
-                        <TableHead>Available</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Unit Price</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead className="py-4">Item Name</TableHead>
+                        <TableHead className="py-4">Available</TableHead>
+                        <TableHead className="py-4">Quantity</TableHead>
+                        <TableHead className="py-4">Unit Price</TableHead>
+                        <TableHead className="py-4">Total</TableHead>
+                        <TableHead className="w-[60px] py-4"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {items.map((item, index) => {
                         const available = getAvailableQuantity(item.item_name);
                         return (
-                          <TableRow key={index}>
-                            <TableCell>
+                          <TableRow key={index} className="hover:bg-muted/50">
+                            <TableCell className="py-4">
                               <Input
                                 value={item.item_name}
                                 onChange={(e) => updateItem(index, 'item_name', e.target.value)}
                                 placeholder="Item name"
                                 required
                                 disabled={isPending}
+                                className="h-10"
                               />
                             </TableCell>
-                            <TableCell className={available < item.quantity ? 'text-destructive' : ''}>
+                            <TableCell className={`py-4 text-base font-medium ${available < item.quantity ? 'text-destructive' : ''}`}>
                               {available}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="py-4">
                               <Input
                                 type="number"
                                 step="0.01"
@@ -218,9 +221,10 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
                                 onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                                 required
                                 disabled={isPending}
+                                className="h-10"
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="py-4">
                               <Input
                                 type="number"
                                 step="0.01"
@@ -229,10 +233,13 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
                                 onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
                                 required
                                 disabled={isPending}
+                                className="h-10"
                               />
                             </TableCell>
-                            <TableCell>{item.total.toFixed(2)}</TableCell>
-                            <TableCell>
+                            <TableCell className="py-4 text-base font-medium">
+                              {item.total.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="py-4">
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -250,8 +257,8 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
                   </Table>
                 </div>
               )}
-              <div className="text-right text-sm font-medium">
-                Total Amount: {totalAmount.toFixed(2)}
+              <div className="text-right text-base font-semibold pt-2">
+                Total Amount: ₹{totalAmount.toFixed(2)}
               </div>
             </div>
           </div>
