@@ -1,20 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth } from '@/features/auth/hooks/use-auth';
+import Link from "next/link";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
 import {
   House,
   Users,
@@ -24,60 +20,74 @@ import {
   ArrowSquareIn,
   Warehouse,
   Gear,
-  SignOut,
-} from '@phosphor-icons/react';
+  Command,
+} from "@phosphor-icons/react";
+import { NavUser } from "./nav-user";
+import { NavMain } from "./nav-main";
 
 const navItems: Array<{
-  href: string;
-  label: string;
+  url: string;
+  title: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
 }> = [
-  { href: '/', label: 'Dashboard', icon: House },
-  { href: '/accounts', label: 'Accounts', icon: Users },
-  { href: '/goods-in', label: 'Goods In', icon: Package },
-  { href: '/goods-out', label: 'Goods Out', icon: ShoppingCart },
-  { href: '/payment-in', label: 'Payment In', icon: ArrowSquareIn },
-  { href: '/payment-out', label: 'Payment Out', icon: ArrowSquareOut },
-  { href: '/inventory', label: 'Inventory', icon: Warehouse },
-  { href: '/users', label: 'Users', icon: Users, adminOnly: true },
-  { href: '/settings', label: 'Settings', icon: Gear },
+  { url: "/", title: "Dashboard", icon: House },
+  { url: "/accounts", title: "Accounts", icon: Users },
+  { url: "/goods-in", title: "Goods In", icon: Package },
+  { url: "/goods-out", title: "Goods Out", icon: ShoppingCart },
+  { url: "/payment-in", title: "Payment In", icon: ArrowSquareIn },
+  { url: "/payment-out", title: "Payment Out", icon: ArrowSquareOut },
+  { url: "/inventory", title: "Inventory", icon: Warehouse },
+  { url: "/users", title: "Users", icon: Users, adminOnly: true },
+  { url: "/settings", title: "Settings", icon: Gear },
 ];
 
-export function AppSidebar() {
-  const pathname = usePathname();
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { signOut, user, role } = useAuth();
 
   // Filter nav items based on role
   const filteredNavItems = navItems.filter((item) => {
-    if (item.adminOnly && role !== 'admin') {
+    if (item.adminOnly && role !== "admin") {
       return false;
     }
     return true;
   });
 
   return (
-    <Sidebar>
+    <Sidebar variant="inset" {...props}>
       <SidebarHeader>
-        <div className="px-2 py-2">
-          <h1 className="text-lg font-bold">Nitin Enterprises</h1>
-          <p className="text-xs text-muted-foreground">Inventory Management</p>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="#">
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Command className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">
+                    Nitin Enterprises
+                  </span>
+                  <span className="truncate text-xs">Inventory Management</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+        {/* <SidebarGroup>
+          <SidebarGrouptitle>Navigation</SidebarGrouptitle>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.url;
                 return (
-                  <SidebarMenuItem key={item.href}>
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.href}>
+                      <Link url={item.url}>
                         <Icon className="size-4" />
-                        <span>{item.label}</span>
+                        <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -85,24 +95,18 @@ export function AppSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
+        <NavMain items={filteredNavItems} />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="px-2 py-1.5">
-              <div className="text-xs text-muted-foreground truncate">
-                {user?.email}
-              </div>
-            </div>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => signOut()}>
-              <SignOut className="size-4" />
-              <span>Sign Out</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser
+          user={{
+            name: user?.user_metadata?.name || "",
+            email: user?.email || "",
+            avatar: user?.user_metadata?.avatar || "",
+          }}
+          onSignOut={() => signOut()}
+        />
       </SidebarFooter>
     </Sidebar>
   );

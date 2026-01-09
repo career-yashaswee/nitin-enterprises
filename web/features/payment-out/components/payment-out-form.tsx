@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useCreatePaymentOut, useUpdatePaymentOut } from '../hooks/use-payment-out';
-import { useAccounts } from '@/features/accounts/hooks/use-accounts';
+import { AccountCombobox } from '@/features/accounts/components/account-combobox';
 import { useGoodsIn } from '@/features/goods-in/hooks/use-goods-in';
 import { usePaymentOut } from '../hooks/use-payment-out';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
 
-  const { data: accounts } = useAccounts();
   const { data: goodsInReceipts } = useGoodsIn();
   const { data: allPaymentsOut } = usePaymentOut();
   const createPaymentOut = useCreatePaymentOut();
@@ -51,10 +50,27 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
     }
   }, [payment, open]);
 
+  // Clear receipt selection when account changes
+  useEffect(() => {
+    if (accountId && goodsInReceiptId) {
+      const receipt = goodsInReceipts?.find((r) => r.id === goodsInReceiptId);
+      if (receipt && receipt.account_id !== accountId) {
+        setGoodsInReceiptId('');
+      }
+    }
+  }, [accountId, goodsInReceiptId, goodsInReceipts]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!goodsInReceiptId || !accountId || !amount) {
       toast.error('Please fill all required fields');
+      return;
+    }
+
+    // Validate that the receipt belongs to the selected account
+    const receipt = goodsInReceipts?.find((r) => r.id === goodsInReceiptId);
+    if (receipt && receipt.account_id !== accountId) {
+      toast.error('Selected receipt does not belong to the selected account');
       return;
     }
 
@@ -87,6 +103,11 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
 
   const isPending = createPaymentOut.isPending || updatePaymentOut.isPending;
 
+  // Filter goods in receipts by selected account
+  const filteredGoodsInReceipts = goodsInReceipts?.filter(
+    (receipt) => !accountId || receipt.account_id === accountId
+  ) || [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -98,24 +119,48 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            <AccountCombobox
+              value={accountId}
+              onValueChange={(newAccountId) => {
+                setAccountId(newAccountId);
+                // Clear receipt selection when account changes
+                if (newAccountId !== accountId) {
+                  setGoodsInReceiptId('');
+                }
+              }}
+              disabled={isPending}
+              label="Account"
+              required
+              placeholder="Search accounts..."
+            />
             <div className="space-y-2">
               <Label htmlFor="goods_in_receipt">Goods In Receipt *</Label>
-              <Select value={goodsInReceiptId} onValueChange={setGoodsInReceiptId} disabled={isPending}>
+              <Select 
+                value={goodsInReceiptId} 
+                onValueChange={setGoodsInReceiptId} 
+                disabled={isPending || !accountId}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select goods in receipt" />
+                  <SelectValue placeholder={accountId ? "Select goods in receipt" : "Select an account first"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {goodsInReceipts?.map((receipt) => {
-                    const balance = allPaymentsOut
-                      ? calculateGoodsInBalance(receipt, allPaymentsOut)
-                      : null;
-                    return (
-                      <SelectItem key={receipt.id} value={receipt.id}>
-                        {receipt.account?.name} - {new Date(receipt.date).toLocaleDateString()} - ₹{receipt.total_amount.toFixed(2)}
-                        {balance && balance.remaining > 0 && ` (Remaining: ₹${balance.remaining.toFixed(2)})`}
-                      </SelectItem>
-                    );
-                  })}
+                  {filteredGoodsInReceipts.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-muted-foreground">
+                      {accountId ? 'No goods in receipts found for this account' : 'Select an account first'}
+                    </div>
+                  ) : (
+                    filteredGoodsInReceipts.map((receipt) => {
+                      const balance = allPaymentsOut
+                        ? calculateGoodsInBalance(receipt, allPaymentsOut)
+                        : null;
+                      return (
+                        <SelectItem key={receipt.id} value={receipt.id}>
+                          {new Date(receipt.date).toLocaleDateString()} - ₹{receipt.total_amount.toFixed(2)}
+                          {balance && balance.remaining > 0 && ` (Remaining: ₹${balance.remaining.toFixed(2)})`}
+                        </SelectItem>
+                      );
+                    })
+                  )}
                 </SelectContent>
               </Select>
               {goodsInReceiptId && allPaymentsOut && goodsInReceipts && (
@@ -145,21 +190,6 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
                   })()}
                 </div>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="account">Account *</Label>
-              <Select value={accountId} onValueChange={setAccountId} disabled={isPending}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts?.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

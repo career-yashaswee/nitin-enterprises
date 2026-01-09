@@ -28,7 +28,7 @@ BEGIN
   RETURN QUERY
   SELECT 
     u.id,
-    u.email,
+    u.email::TEXT,
     COALESCE(ur.role, u.raw_user_meta_data->>'role', 'manager')::TEXT as role,
     COALESCE(ur.created_at, u.created_at) as created_at
   FROM auth.users u

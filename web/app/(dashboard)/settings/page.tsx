@@ -1,21 +1,29 @@
-'use client';
+"use client";
 
-import { ProtectedRoute } from '@/features/auth/components/protected-route';
-import { useAuth } from '@/features/auth/hooks/use-auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { ProtectedRoute } from "@/features/auth/components/protected-route";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function SettingsPage() {
   const { user, role } = useAuth();
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="container mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your account settings</p>
+          <p className="text-sm text-muted-foreground">
+            Manage your account settings
+          </p>
         </div>
 
         <Card>
@@ -26,19 +34,19 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" value={user?.email || ''} disabled />
+              <Input id="email" value={user?.email || ""} disabled />
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
               <div>
-                <Badge variant={role === 'admin' ? 'default' : 'secondary'}>
-                  {role?.toUpperCase() || 'N/A'}
+                <Badge variant={role === "admin" ? "default" : "secondary"}>
+                  {role?.toUpperCase() || "N/A"}
                 </Badge>
               </div>
             </div>
             <div className="space-y-2">
               <Label>User ID</Label>
-              <Input value={user?.id || ''} disabled />
+              <Input value={user?.id || ""} disabled />
             </div>
           </CardContent>
         </Card>

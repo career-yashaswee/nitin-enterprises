@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useCreateGoodsIn, useUpdateGoodsIn } from '../hooks/use-goods-in';
-import { useAccounts } from '@/features/accounts/hooks/use-accounts';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEffect, useState } from "react";
+import { useCreateGoodsIn, useUpdateGoodsIn } from "../hooks/use-goods-in";
+import { AccountCombobox } from "@/features/accounts/components/account-combobox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -15,11 +14,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
-import type { GoodsInReceiptWithItems, GoodsInItem } from '../types';
-import { PlusIcon, TrashIcon } from '@phosphor-icons/react';
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "sonner";
+import type { GoodsInReceiptWithItems, GoodsInItem } from "../types";
+import { PlusIcon, TrashIcon } from "@phosphor-icons/react";
 
 interface GoodsInFormProps {
   open: boolean;
@@ -28,12 +34,13 @@ interface GoodsInFormProps {
 }
 
 export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
-  const [accountId, setAccountId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
-  const [items, setItems] = useState<Omit<GoodsInItem, 'id' | 'receipt_id' | 'created_at'>[]>([]);
+  const [accountId, setAccountId] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState<
+    Omit<GoodsInItem, "id" | "receipt_id" | "created_at">[]
+  >([]);
 
-  const { data: accounts } = useAccounts();
   const createGoodsIn = useCreateGoodsIn();
   const updateGoodsIn = useUpdateGoodsIn();
 
@@ -41,7 +48,7 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
     if (receipt) {
       setAccountId(receipt.account_id);
       setDate(receipt.date);
-      setNotes(receipt.notes || '');
+      setNotes(receipt.notes || "");
       setItems(
         receipt.items.map((item) => ({
           item_name: item.item_name,
@@ -51,15 +58,18 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
         }))
       );
     } else {
-      setAccountId('');
-      setDate(new Date().toISOString().split('T')[0]);
-      setNotes('');
+      setAccountId("");
+      setDate(new Date().toISOString().split("T")[0]);
+      setNotes("");
       setItems([]);
     }
   }, [receipt, open]);
 
   const addItem = () => {
-    setItems([...items, { item_name: '', quantity: 0, unit_price: 0, total: 0 }]);
+    setItems([
+      ...items,
+      { item_name: "", quantity: 0, unit_price: 0, total: 0 },
+    ]);
   };
 
   const removeItem = (index: number) => {
@@ -69,8 +79,9 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
   const updateItem = (index: number, field: string, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
-    if (field === 'quantity' || field === 'unit_price') {
-      newItems[index].total = Number(newItems[index].quantity) * Number(newItems[index].unit_price);
+    if (field === "quantity" || field === "unit_price") {
+      newItems[index].total =
+        Number(newItems[index].quantity) * Number(newItems[index].unit_price);
     }
     setItems(newItems);
   };
@@ -78,11 +89,11 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accountId) {
-      toast.error('Please select an account');
+      toast.error("Please select an account");
       return;
     }
     if (items.length === 0) {
-      toast.error('Please add at least one item');
+      toast.error("Please add at least one item");
       return;
     }
 
@@ -95,7 +106,7 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
           notes: notes || undefined,
           items,
         });
-        toast.success('Goods In receipt updated successfully');
+        toast.success("Goods In receipt updated successfully");
       } else {
         await createGoodsIn.mutateAsync({
           account_id: accountId,
@@ -103,11 +114,11 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
           notes: notes || undefined,
           items,
         });
-        toast.success('Goods In receipt created successfully');
+        toast.success("Goods In receipt created successfully");
       }
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save receipt');
+      toast.error(error.message || "Failed to save receipt");
     }
   };
 
@@ -118,29 +129,26 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{receipt ? 'Edit Goods In Receipt' : 'Create Goods In Receipt'}</DialogTitle>
+          <DialogTitle>
+            {receipt ? "Edit Goods In Receipt" : "Create Goods In Receipt"}
+          </DialogTitle>
           <DialogDescription>
-            {receipt ? 'Update goods in receipt information' : 'Record goods received from an account'}
+            {receipt
+              ? "Update goods in receipt information"
+              : "Record goods received from an account"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="account">Account *</Label>
-                <Select value={accountId} onValueChange={setAccountId} disabled={isPending}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts?.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <AccountCombobox
+                value={accountId}
+                onValueChange={setAccountId}
+                disabled={isPending}
+                label="Account"
+                required
+                placeholder="Search accounts..."
+              />
               <div className="space-y-2">
                 <Label htmlFor="date">Date *</Label>
                 <Input
@@ -166,7 +174,13 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Items *</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={isPending}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addItem}
+                  disabled={isPending}
+                >
                   <PlusIcon className="size-4" />
                   Add Item
                 </Button>
@@ -189,7 +203,9 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
                           <TableCell>
                             <Input
                               value={item.item_name}
-                              onChange={(e) => updateItem(index, 'item_name', e.target.value)}
+                              onChange={(e) =>
+                                updateItem(index, "item_name", e.target.value)
+                              }
                               placeholder="Item name"
                               required
                               disabled={isPending}
@@ -201,7 +217,13 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
                               step="0.01"
                               min="0"
                               value={item.quantity}
-                              onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                              onChange={(e) =>
+                                updateItem(
+                                  index,
+                                  "quantity",
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
                               required
                               disabled={isPending}
                             />
@@ -212,7 +234,13 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
                               step="0.01"
                               min="0"
                               value={item.unit_price}
-                              onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                              onChange={(e) =>
+                                updateItem(
+                                  index,
+                                  "unit_price",
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
                               required
                               disabled={isPending}
                             />
@@ -241,11 +269,16 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isPending || items.length === 0}>
-              {isPending ? 'Saving...' : receipt ? 'Update' : 'Create'}
+              {isPending ? "Saving..." : receipt ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </form>

@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useCreateGoodsOut, useUpdateGoodsOut } from '../hooks/use-goods-out';
-import { useAccounts } from '@/features/accounts/hooks/use-accounts';
+import { AccountCombobox } from '@/features/accounts/components/account-combobox';
 import { useInventory } from '@/features/inventory/hooks/use-inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +33,6 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<Omit<GoodsOutItem, 'id' | 'receipt_id' | 'created_at'>[]>([]);
 
-  const { data: accounts } = useAccounts();
   const { data: inventory } = useInventory();
   const createGoodsOut = useCreateGoodsOut();
   const updateGoodsOut = useUpdateGoodsOut();
@@ -142,21 +140,14 @@ export function GoodsOutForm({ open, onOpenChange, receipt }: GoodsOutFormProps)
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="account">Account *</Label>
-                <Select value={accountId} onValueChange={setAccountId} disabled={isPending}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts?.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <AccountCombobox
+                value={accountId}
+                onValueChange={setAccountId}
+                disabled={isPending}
+                label="Account"
+                required
+                placeholder="Search accounts..."
+              />
               <div className="space-y-2">
                 <Label htmlFor="date">Date *</Label>
                 <Input

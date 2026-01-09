@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { ProtectedRoute } from '@/features/auth/components/protected-route';
-import { UsersList } from '@/features/users/components/users-list';
-import { useRole } from '@/features/auth/hooks/use-role';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { ProtectedRoute } from "@/features/auth/components/protected-route";
+import { UsersList } from "@/features/users/components/users-list";
+import { useRole } from "@/features/auth/hooks/use-role";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function UsersPage() {
   const { isAdmin } = useRole();
@@ -12,7 +12,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     if (!isAdmin) {
-      router.push('/');
+      router.push("/");
     }
   }, [isAdmin, router]);
 
@@ -21,11 +21,13 @@ export default function UsersPage() {
   }
 
   return (
-    <ProtectedRoute allowedRoles={['admin']}>
-      <div className="container mx-auto py-8 space-y-6">
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <div className="container mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-sm text-muted-foreground">Manage user roles and permissions</p>
+          <p className="text-sm text-muted-foreground">
+            Manage user roles and permissions
+          </p>
         </div>
         <UsersList />
       </div>
