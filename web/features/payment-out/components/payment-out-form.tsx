@@ -4,14 +4,17 @@ import { useEffect, useState } from 'react';
 import { useCreatePaymentOut, useUpdatePaymentOut } from '../hooks/use-payment-out';
 import { useAccounts } from '@/features/accounts/hooks/use-accounts';
 import { useGoodsIn } from '@/features/goods-in/hooks/use-goods-in';
+import { usePaymentOut } from '../hooks/use-payment-out';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import type { PaymentOutWithRelations } from '../types';
+import { calculateGoodsInBalance } from '../utils/balance';
 
 interface PaymentOutFormProps {
   open: boolean;
@@ -28,6 +31,7 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
 
   const { data: accounts } = useAccounts();
   const { data: goodsInReceipts } = useGoodsIn();
+  const { data: allPaymentsOut } = usePaymentOut();
   const createPaymentOut = useCreatePaymentOut();
   const updatePaymentOut = useUpdatePaymentOut();
 
@@ -101,13 +105,46 @@ export function PaymentOutForm({ open, onOpenChange, payment }: PaymentOutFormPr
                   <SelectValue placeholder="Select goods in receipt" />
                 </SelectTrigger>
                 <SelectContent>
-                  {goodsInReceipts?.map((receipt) => (
-                    <SelectItem key={receipt.id} value={receipt.id}>
-                      {receipt.account?.name} - {new Date(receipt.date).toLocaleDateString()} - ₹{receipt.total_amount.toFixed(2)}
-                    </SelectItem>
-                  ))}
+                  {goodsInReceipts?.map((receipt) => {
+                    const balance = allPaymentsOut
+                      ? calculateGoodsInBalance(receipt, allPaymentsOut)
+                      : null;
+                    return (
+                      <SelectItem key={receipt.id} value={receipt.id}>
+                        {receipt.account?.name} - {new Date(receipt.date).toLocaleDateString()} - ₹{receipt.total_amount.toFixed(2)}
+                        {balance && balance.remaining > 0 && ` (Remaining: ₹${balance.remaining.toFixed(2)})`}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+              {goodsInReceiptId && allPaymentsOut && goodsInReceipts && (
+                <div className="text-sm space-y-1">
+                  {(() => {
+                    const receipt = goodsInReceipts.find((r) => r.id === goodsInReceiptId);
+                    if (!receipt) return null;
+                    const balance = calculateGoodsInBalance(receipt, allPaymentsOut);
+                    return (
+                      <div className="flex flex-col gap-1 p-2 bg-muted rounded-md">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total Amount:</span>
+                          <span className="font-medium">₹{balance.total.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Paid:</span>
+                          <span className="font-medium">₹{balance.paid.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-1">
+                          <span className="font-medium">Remaining:</span>
+                          <Badge variant={balance.remaining > 0 ? 'outline' : 'secondary'}>
+                            ₹{balance.remaining.toFixed(2)}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="account">Account *</Label>

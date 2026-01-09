@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useCreateAccount, useUpdateAccount } from '../hooks/use-accounts';
+import { useThrottledCallback } from '@/lib/hooks/use-throttled-callback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,7 +43,7 @@ export function AccountForm({ open, onOpenChange, account }: AccountFormProps) {
     }
   }, [account, open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitInternal = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const input: CreateAccountInput = {
@@ -64,6 +65,9 @@ export function AccountForm({ open, onOpenChange, account }: AccountFormProps) {
       toast.error(error.message || 'Failed to save account');
     }
   };
+
+  // Throttle form submission to prevent rapid clicks
+  const handleSubmit = useThrottledCallback(handleSubmitInternal, 1000);
 
   const isPending = createAccount.isPending || updateAccount.isPending;
 
