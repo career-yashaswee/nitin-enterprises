@@ -15,7 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   Users,
   Package,
@@ -24,6 +23,8 @@ import {
   ArrowSquareOut,
   Warehouse,
 } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
+import { QuickActions } from "@/components/quick-actions";
 
 export default function DashboardPage() {
   const { data: accounts } = useAccounts();
@@ -104,55 +105,36 @@ export default function DashboardPage() {
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Link key={stat.href} href={stat.href}>
-                <Card className="hover:bg-accent transition-colors cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{stat.title}</CardTitle>
-                      <Icon className="size-5 text-muted-foreground" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stat.value}</div>
-                    {stat.subtitle && (
-                      <CardDescription className="mt-1">
-                        {stat.subtitle}
-                      </CardDescription>
-                    )}
-                  </CardContent>
-                </Card>
+              <Link key={stat.href} href={stat.href} className="h-full">
+                <motion.div
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="h-full"
+                >
+                  <Card className="h-full flex flex-col cursor-pointer">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{stat.title}</CardTitle>
+                        <Icon className="size-5 text-muted-foreground" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col">
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      {stat.subtitle && (
+                        <CardDescription className="mt-1">
+                          {stat.subtitle}
+                        </CardDescription>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Link>
             );
           })}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/accounts">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="size-4 mr-2" />
-                  Add New Account
-                </Button>
-              </Link>
-              <Link href="/goods-in">
-                <Button variant="outline" className="w-full justify-start">
-                  <Package className="size-4 mr-2" />
-                  Record Goods In
-                </Button>
-              </Link>
-              <Link href="/goods-out">
-                <Button variant="outline" className="w-full justify-start">
-                  <ShoppingCart className="size-4 mr-2" />
-                  Record Goods Out
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <QuickActions />
 
           <Card>
             <CardHeader>
