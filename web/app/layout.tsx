@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/providers/query-provider";
+import { NuqsProvider } from "@/lib/providers/nuqs-provider";
+import { NetworkStatusProvider } from "@/lib/providers/network-status-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
 
@@ -38,10 +40,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>
-            {children}
-            <Toaster richColors />
-          </QueryProvider>
+          <NuqsProvider>
+            <QueryProvider>
+              {children}
+              <Toaster richColors />
+              <NetworkStatusProvider />
+            </QueryProvider>
+          </NuqsProvider>
         </ThemeProvider>
       </body>
     </html>

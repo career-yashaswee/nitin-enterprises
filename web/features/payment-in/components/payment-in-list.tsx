@@ -7,10 +7,15 @@ import { useRole } from '@/features/auth/hooks/use-role';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import type { PaymentInWithRelations } from '../types';
-import { PencilIcon, TrashIcon } from '@phosphor-icons/react';
+import { PencilIcon, TrashIcon, MagnifyingGlass } from '@phosphor-icons/react';
 import { format } from 'date-fns';
+import { EmptyState } from '@/features/utilities/empty-states';
+import { ExportButton } from '@/features/utilities/export-button';
+import { RefreshButton } from '@/features/utilities/refresh-button';
+import { useSearchInput } from '@/features/utilities/search-input';
 
 export function PaymentInList() {
   const { data: payments, isLoading } = usePaymentIn();
@@ -18,6 +23,12 @@ export function PaymentInList() {
   const deletePaymentIn = useDeletePaymentIn();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<PaymentInWithRelations | null>(null);
+
+  const { query, setQuery, results } = useSearchInput({
+    data: payments || [],
+    searchKeys: ['account.name', 'payment_mode', 'id'],
+    enableUrlSync: true,
+  });
 
   const columns = useMemo<ColumnDef<PaymentInWithRelations>[]>(
     () => [
@@ -76,7 +87,7 @@ export function PaymentInList() {
   );
 
   const table = useReactTable({
-    data: payments || [],
+    data: results,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -95,52 +106,83 @@ export function PaymentInList() {
   };
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Loading payments...</div>;
+    return <EmptyState type="loading" />;
   }
+
+  const hasData = results.length > 0;
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center text-muted-foreground">
-                  No payments found
-                </TableCell>
-              </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 max-w-sm">
+            <div className="relative">
+              <MagnifyingGlass className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search payments..."
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <RefreshButton queryKeys={[['payment-in']]} resource="payment in records" />
+            <ExportButton
+              fetchData={async () => results}
+              filename="payment-in"
+              resource="payment in records"
+            />
+          </div>
+        </div>
+
+        {!hasData ? (
+          <EmptyState
+            type={query ? "search" : "no-data"}
+            title={query ? "No results found" : "No payments found"}
+            description={query ? "Try adjusting your search criteria." : "There are no payment in records to display."}
+            actionLabel={query ? "Clear search" : undefined}
+            onAction={query ? () => setQuery('') : undefined}
+          />
+        ) : (
+          <>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end gap-2 mt-4">
-        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-          Previous
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-          Next
-        </Button>
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                Next
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

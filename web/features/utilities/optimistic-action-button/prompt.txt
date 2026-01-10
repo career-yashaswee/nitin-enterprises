@@ -1,0 +1,319 @@
+You are given a task to integrate a React component into your codebase.
+Please verify your project has the following setup:
+- Next.js project (App Router) or React project
+- shadcn/ui project structure (or compatible UI library with Button component)
+- Tailwind CSS
+- TypeScript
+- `framer-motion` package installed
+- `sonner` package installed
+- `class-variance-authority` package installed
+- `clsx` and `tailwind-merge` packages installed (for cn utility)
+
+If any of these are missing, provide instructions on how to install them:
+- Install dependencies: `npm install framer-motion sonner class-variance-authority clsx tailwind-merge`
+- If shadcn/ui is not set up, guide the user to install it via: `npx shadcn@latest init`
+- If Button component doesn't exist, install it via: `npx shadcn@latest add button`
+
+Determine the default path for components and utilities.
+- Components should go in /components folder
+- If /lib/utils.ts doesn't exist, create it with the cn utility function
+
+Check if /lib/utils.ts exists. If not, create it:
+
+File location: lib/utils.ts
+
+File content: import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+
+Copy-paste this component to /components folder:
+
+File location: components/optimistic-action-button.tsx
+
+File content: "use client";
+
+import { type ReactNode, useCallback, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { type VariantProps } from "class-variance-authority";
+
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface OptimisticActionButtonProps extends VariantProps<
+  typeof buttonVariants
+> {
+  action: () => Promise<void>;
+  optimisticState: boolean;
+  onOptimisticUpdate: () => void;
+  onRollback: () => void;
+  children: ReactNode;
+  loadingMessage?: string;
+  successMessage?: string;
+  errorMessage?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  className?: string;
+  disabled?: boolean;
+}
+
+export function OptimisticActionButton({
+  action,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  optimisticState: _optimisticState,
+  onOptimisticUpdate,
+  onRollback,
+  children,
+  loadingMessage = "Processing...",
+  successMessage = "Action completed successfully.",
+  errorMessage = "Action failed. Please try again.",
+  onSuccess,
+  onError,
+  variant,
+  size,
+  className,
+  disabled = false,
+}: OptimisticActionButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = useCallback(() => {
+    if (isLoading || disabled) return;
+
+    onOptimisticUpdate();
+    setIsLoading(true);
+
+    const actionPromise = Promise.resolve(action())
+      .then(() => {
+        onSuccess?.();
+      })
+      .catch((error) => {
+        onRollback();
+        const err = error instanceof Error ? error : new Error("Action failed");
+        onError?.(err);
+        throw err;
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+
+    toast.promise(actionPromise, {
+      loading: loadingMessage,
+      success: successMessage,
+      error: errorMessage,
+    });
+  }, [
+    isLoading,
+    disabled,
+    action,
+    onOptimisticUpdate,
+    onRollback,
+    loadingMessage,
+    successMessage,
+    errorMessage,
+    onSuccess,
+    onError,
+  ]);
+
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      onClick={handleClick}
+      disabled={isLoading || disabled}
+      className={cn("relative overflow-hidden", className)}
+    >
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="h-4 w-4 rounded-full border-2 border-current border-t-transparent"
+            />
+            <span className="hidden sm:inline">{loadingMessage}</span>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.15 }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Button>
+  );
+}
+
+
+Now, integrate this component into your page:
+
+File location: app/page.tsx (or any page where you want optimistic updates)
+
+Instructions:
+1. Import OptimisticActionButton from "@/components/optimistic-action-button"
+2. Import Toaster from "sonner" and add it to your layout
+3. Create state to track optimistic updates
+4. Create an async action function
+5. Provide onOptimisticUpdate and onRollback callbacks
+6. Add the OptimisticActionButton component
+
+Example integration:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { OptimisticActionButton } from "@/components/optimistic-action-button";
+
+export default function MyPage() {
+  const [liked, setLiked] = useState(false);
+
+  const handleLike = async () => {
+    await fetch("/api/like", { method: "POST" });
+  };
+
+  return (
+    <OptimisticActionButton
+      action={handleLike}
+      optimisticState={liked}
+      onOptimisticUpdate={() => setLiked(true)}
+      onRollback={() => setLiked(false)}
+    >
+      {liked ? "Unlike" : "Like"}
+    </OptimisticActionButton>
+  );
+}
+```
+
+Also add Toaster to your layout:
+
+File location: app/layout.tsx
+
+```tsx
+import { Toaster } from "sonner";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
+    </html>
+  );
+}
+```
+
+Customization examples:
+
+Basic usage:
+```tsx
+<OptimisticActionButton
+  action={handleAction}
+  optimisticState={state}
+  onOptimisticUpdate={() => setState(true)}
+  onRollback={() => setState(false)}
+>
+  Click Me
+</OptimisticActionButton>
+```
+
+Custom messages:
+```tsx
+<OptimisticActionButton
+  action={handleAction}
+  optimisticState={state}
+  onOptimisticUpdate={() => setState(true)}
+  onRollback={() => setState(false)}
+  loadingMessage="Processing request..."
+  successMessage="Action completed!"
+  errorMessage="Something went wrong"
+>
+  Submit
+</OptimisticActionButton>
+```
+
+With callbacks:
+```tsx
+<OptimisticActionButton
+  action={handleAction}
+  optimisticState={state}
+  onOptimisticUpdate={() => setState(true)}
+  onRollback={() => setState(false)}
+  onSuccess={() => console.log("Success!")}
+  onError={(error) => console.error("Error:", error)}
+>
+  Submit
+</OptimisticActionButton>
+```
+
+Complete example:
+```tsx
+import { useState } from "react";
+import { OptimisticActionButton } from "@/components/optimistic-action-button";
+
+export default function LikeButton() {
+  const [liked, setLiked] = useState(false);
+
+  const handleLike = async () => {
+    await fetch("/api/like", { method: "POST" });
+  };
+
+  return (
+    <OptimisticActionButton
+      action={handleLike}
+      optimisticState={liked}
+      onOptimisticUpdate={() => setLiked(true)}
+      onRollback={() => setLiked(false)}
+      loadingMessage="Liking post..."
+      successMessage="Post liked!"
+      errorMessage="Failed to like post"
+      variant="default"
+      size="sm"
+      onSuccess={() => {
+        console.log("Like successful!");
+      }}
+    >
+      {liked ? "Unlike" : "Like"}
+    </OptimisticActionButton>
+  );
+}
+```
+
+Important notes:
+- The component applies optimistic updates immediately
+- If the action fails, onRollback is called automatically
+- Loading state shows animated spinner
+- Toast notifications show progress and result
+- Button is disabled during loading
+- Optimistic state should be managed in parent component
+- Action function must return Promise<void>
+
+Testing:
+1. Click the button
+2. Button should immediately show loading state
+3. Optimistic update should apply immediately (e.g., state changes)
+4. Toast notification shows "Processing..."
+5. On success, success toast appears
+6. On error, rollback occurs and error toast appears
+

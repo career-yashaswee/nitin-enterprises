@@ -1,0 +1,281 @@
+You are given a task to integrate a React component into your codebase.
+Please verify your project has the following setup:
+- Next.js project (App Router) or React project
+- shadcn/ui project structure (or compatible UI library with Button component)
+- Tailwind CSS
+- TypeScript
+- `@tanstack/react-query` package installed
+- `framer-motion` package installed
+- `sonner` package installed
+- `lucide-react` package installed
+- `class-variance-authority` package installed
+- `clsx` and `tailwind-merge` packages installed (for cn utility)
+
+If any of these are missing, provide instructions on how to install them:
+- Install dependencies: `npm install @tanstack/react-query framer-motion sonner lucide-react class-variance-authority clsx tailwind-merge`
+- If shadcn/ui is not set up, guide the user to install it via: `npx shadcn@latest init`
+- If Button component doesn't exist, install it via: `npx shadcn@latest add button`
+
+Determine the default path for components and utilities.
+- Components should go in /components folder
+- If /lib/utils.ts doesn't exist, create it with the cn utility function
+
+Check if /lib/utils.ts exists. If not, create it:
+
+File location: lib/utils.ts
+
+File content: import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+
+Copy-paste this component to /components folder:
+
+File location: components/refresh-button.tsx
+
+File content: "use client";
+
+import { useCallback, useState } from "react";
+import { useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { type VariantProps } from "class-variance-authority";
+
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface RefreshButtonProps extends VariantProps<typeof buttonVariants> {
+  queryKeys: QueryKey[];
+  resource?: string;
+  label?: string;
+  ariaLabel?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  className?: string;
+  showIcon?: boolean;
+}
+
+export function RefreshButton({
+  queryKeys,
+  resource = "data",
+  label,
+  ariaLabel,
+  onSuccess,
+  onError,
+  variant = "outline",
+  size = "sm",
+  className,
+  showIcon = true,
+}: RefreshButtonProps) {
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleClick = useCallback(() => {
+    if (!queryKeys.length || isRefreshing) return;
+
+    setIsRefreshing(true);
+
+    const refreshPromise = Promise.allSettled(
+      queryKeys.map((key) =>
+        queryClient.invalidateQueries({ queryKey: key }).catch((error) => {
+          const err =
+            error instanceof Error ? error : new Error("Refresh failed");
+          onError?.(err);
+          return Promise.reject(err);
+        }),
+      ),
+    ).then((results) => {
+      const failures = results.filter((r) => r.status === "rejected");
+      if (failures.length === 0) {
+        onSuccess?.();
+      } else if (failures.length < results.length) {
+        // Partial success - decide how to handle
+        onSuccess?.(); // or handle differently
+      }
+      if (failures.length > 0) {
+        throw new Error(
+          `Failed to refresh ${failures.length} of ${results.length} queries`,
+        );
+      }
+    });
+
+    toast.promise(refreshPromise, {
+      loading: `Refreshing ${resource}`,
+      success: `${resource} refreshed successfully!`,
+      error: `Failed to refresh ${resource}.`,
+    });
+
+    refreshPromise.finally(() => {
+      setIsRefreshing(false);
+    });
+  }, [queryClient, queryKeys, resource, isRefreshing, onSuccess, onError]);
+
+  const displayLabel = label ?? "Refresh";
+  const displayAriaLabel = ariaLabel ?? `Refresh ${resource}`;
+
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      aria-label={displayAriaLabel}
+      onClick={handleClick}
+      disabled={isRefreshing}
+      className={cn("inline-flex items-center gap-2", className)}
+    >
+      {showIcon && (
+        <motion.div
+          animate={{ rotate: isRefreshing ? 360 : 0 }}
+          transition={{
+            duration: 1,
+            repeat: isRefreshing ? Infinity : 0,
+            ease: "linear",
+          }}
+        >
+          <RefreshCw className="h-4 w-4 shrink-0" />
+        </motion.div>
+      )}
+      {displayLabel && <span className="hidden sm:inline">{displayLabel}</span>}
+    </Button>
+  );
+}
+
+
+Now, set up React Query (if not already set up):
+
+File location: app/layout.tsx or app/providers.tsx
+
+```tsx
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+Also add Toaster to your layout:
+
+File location: app/layout.tsx
+
+```tsx
+import { Toaster } from "sonner";
+
+// Add inside your layout component:
+<Toaster richColors position="top-right" />
+```
+
+Now, integrate this component into your page:
+
+File location: app/page.tsx (or any page where you want refresh functionality)
+
+Instructions:
+1. Import RefreshButton from "@/components/refresh-button"
+2. Provide queryKeys that match your React Query useQuery keys
+3. Add the RefreshButton component
+
+Example integration:
+
+```tsx
+"use client";
+
+import { RefreshButton } from "@/components/refresh-button";
+
+export default function UsersPage() {
+  return (
+    <div>
+      <h1>Users</h1>
+      <RefreshButton queryKeys={[["users"]]} resource="users" />
+    </div>
+  );
+}
+```
+
+Customization examples:
+
+Basic usage:
+```tsx
+<RefreshButton queryKeys={[["users"]]} />
+```
+
+Multiple query keys:
+```tsx
+<RefreshButton queryKeys={[["users"], ["posts"], ["comments"]]} />
+```
+
+Custom resource and label:
+```tsx
+<RefreshButton
+  queryKeys={[["users"]]}
+  resource="users"
+  label="Reload"
+/>
+```
+
+Custom aria label:
+```tsx
+<RefreshButton
+  queryKeys={[["users"]]}
+  ariaLabel="Refresh user list"
+/>
+```
+
+With callbacks:
+```tsx
+<RefreshButton
+  queryKeys={[["users"]]}
+  onSuccess={() => console.log("Refreshed!")}
+  onError={(error) => console.error("Error:", error)}
+/>
+```
+
+Complete example:
+```tsx
+<RefreshButton
+  queryKeys={[["users"], ["posts"]]}
+  resource="data"
+  label="Refresh"
+  ariaLabel="Refresh users and posts"
+  variant="outline"
+  size="sm"
+  showIcon={true}
+  onSuccess={() => {
+    console.log("Refresh completed!");
+  }}
+/>
+```
+
+Important notes:
+- Query keys must match your React Query useQuery keys
+- Multiple query keys can be invalidated at once
+- Button shows loading state with rotating icon during refresh
+- Toast notifications show progress and result
+- Button is disabled during refresh
+- React Query must be set up with QueryClientProvider
+- Component uses useQueryClient hook internally
+
+Testing:
+1. Click the refresh button
+2. Button should show loading state with rotating icon
+3. Toast notification appears: "Refreshing {resource}"
+4. React Query cache is invalidated for specified keys
+5. Success toast appears: "{resource} refreshed successfully!"
+6. Data should refetch automatically (if queries are active)
+

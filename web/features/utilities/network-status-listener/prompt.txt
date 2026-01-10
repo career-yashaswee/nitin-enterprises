@@ -1,0 +1,122 @@
+You are given a task to integrate a React component into your codebase.
+Please verify your project has the following setup:
+- Next.js project (App Router)
+- shadcn/ui project structure (or compatible UI library)
+- Tailwind CSS
+- TypeScript
+- `@uidotdev/usehooks` package installed
+- `sonner` package installed
+
+If any of these are missing, provide instructions on how to install them:
+- Install dependencies: `npm install @uidotdev/usehooks sonner`
+- If shadcn/ui is not set up, guide the user to install it via: `npx shadcn@latest init`
+
+Determine the default path for components. 
+If default path for components is not /components, provide instructions on why it's important to create this folder.
+
+Copy-paste this component to /components folder:
+
+File location: components/network-status-listener.tsx
+
+File content: "use client";
+
+import { useEffect, useRef } from "react";
+import { useNetworkState } from "@uidotdev/usehooks";
+import { toast } from "sonner";
+
+interface NetworkStatusListenerProps {
+  offlineMessage?: string;
+  onlineMessage?: string;
+  showToast?: boolean;
+}
+
+/**
+ * Monitors network connectivity and shows toast notifications on status changes.
+ */
+export function NetworkStatusListener({
+  offlineMessage = "You are offline. Please check your connection.",
+  onlineMessage = "Connection restored. You are back online.",
+  showToast = true,
+}: NetworkStatusListenerProps) {
+  const network = useNetworkState();
+  const wasOffline = useRef(false);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      wasOffline.current = !network.online;
+      return;
+    }
+
+    if (!network.online && !wasOffline.current) {
+      wasOffline.current = true;
+      if (showToast) {
+        toast.error(offlineMessage, { duration: 5000 });
+      }
+    } else if (network.online && wasOffline.current) {
+      wasOffline.current = false;
+      if (showToast) {
+        toast.success(onlineMessage, { duration: 3000 });
+      }
+    }
+  }, [network.online, showToast, offlineMessage, onlineMessage]);
+
+  return null;
+}
+
+
+Now, integrate this component into the root layout:
+
+File location: app/layout.tsx (or your root layout file)
+
+Instructions:
+1. Import dynamic from "next/dynamic" at the top
+2. Import Toaster from "sonner"
+3. Create a dynamic import for NetworkStatusListener with ssr: false
+4. Add both NetworkStatusListener and Toaster components inside the body tag
+
+Example integration:
+
+```tsx
+import dynamic from "next/dynamic";
+import { Toaster } from "sonner";
+
+const NetworkStatusListener = dynamic(
+  () => import("@/components/network-status-listener").then((mod) => ({
+    default: mod.NetworkStatusListener,
+  })),
+  { ssr: false }
+);
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <NetworkStatusListener />
+        <Toaster richColors position="top-right" />
+      </body>
+    </html>
+  );
+}
+```
+
+Important notes:
+- The component must be imported with dynamic import and ssr: false because it uses browser APIs
+- The Toaster component from sonner is required for toast notifications to work
+- The component returns null, so it doesn't render any UI - it only shows toast notifications
+- Customize messages by passing offlineMessage and onlineMessage props
+- Disable toasts by setting showToast={false}
+
+Testing:
+1. Open browser DevTools (F12)
+2. Go to Network tab
+3. Enable "Offline" mode or disconnect WiFi
+4. Toast notification should appear
+5. Reconnect to see "Connection restored" toast
+

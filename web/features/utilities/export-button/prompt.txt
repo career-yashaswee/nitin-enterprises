@@ -1,0 +1,364 @@
+You are given a task to integrate a React component into your codebase.
+Please verify your project has the following setup:
+- Next.js project (App Router) or React project
+- shadcn/ui project structure (or compatible UI library with Button component)
+- Tailwind CSS
+- TypeScript
+- `csv-stringify` package installed
+- `framer-motion` package installed
+- `sonner` package installed
+- `lucide-react` package installed
+- `class-variance-authority` package installed
+- `clsx` and `tailwind-merge` packages installed (for cn utility)
+
+If any of these are missing, provide instructions on how to install them:
+- Install dependencies: `npm install csv-stringify framer-motion sonner lucide-react class-variance-authority clsx tailwind-merge`
+- If shadcn/ui is not set up, guide the user to install it via: `npx shadcn@latest init`
+- If Button component doesn't exist, install it via: `npx shadcn@latest add button`
+
+Determine the default path for components and utilities.
+- Components should go in /components folder
+- If /lib/utils.ts doesn't exist, create it with the cn utility function
+
+Check if /lib/utils.ts exists. If not, create it:
+
+File location: lib/utils.ts
+
+File content: import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+
+Copy-paste this component to /components folder:
+
+File location: components/export-button.tsx
+
+File content: "use client";
+
+import { useCallback, useState, useRef, useEffect } from "react";
+import { Download, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { stringify } from "csv-stringify/sync";
+import { type VariantProps } from "class-variance-authority";
+
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface ExportButtonProps extends VariantProps<typeof buttonVariants> {
+  fetchData: () => Promise<unknown[]>;
+  filename?: string;
+  resource?: string;
+  label?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  className?: string;
+  showIcon?: boolean;
+  format?: "csv" | "json";
+}
+
+function convertToCSV(data: unknown[]): string {
+  if (!data.length) return "";
+
+  try {
+    return stringify(data, {
+      header: true,
+      cast: {
+        boolean: (value) => String(value),
+        date: (value) => value.toISOString(),
+        number: (value) => String(value),
+      },
+    });
+  } catch {
+    throw new Error("Failed to convert data to CSV");
+  }
+}
+
+function convertToJSON(data: unknown[]): string {
+  try {
+    return JSON.stringify(data, null, 2);
+  } catch (error) {
+    throw new Error(
+      `Failed to convert data to JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function generateFilename(prefix: string, format: "csv" | "json"): string {
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[:.]/g, "-")
+    .replace("T", "_")
+    .slice(0, -5);
+
+  return `${prefix}-${timestamp}.${format}`;
+}
+
+function downloadFile(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function ExportButton({
+  fetchData,
+  filename = "export",
+  resource = "data",
+  label,
+  onSuccess,
+  onError,
+  variant = "outline",
+  size = "sm",
+  className,
+  showIcon = true,
+  format = "csv",
+}: ExportButtonProps) {
+  const [isExporting, setIsExporting] = useState(false);
+  const [hasExported, setHasExported] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleClick = useCallback(() => {
+    if (isExporting) return;
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    const exportPromise = (async () => {
+      setIsExporting(true);
+      setHasExported(false);
+
+      try {
+        const data = await fetchData();
+
+        if (!Array.isArray(data) || !data.length) {
+          throw new Error("No data available to export");
+        }
+
+        const content =
+          format === "csv" ? convertToCSV(data) : convertToJSON(data);
+        const mimeType =
+          format === "csv"
+            ? "text/csv;charset=utf-8;"
+            : "application/json;charset=utf-8;";
+
+        const blob = new Blob([content], { type: mimeType });
+        const downloadFilename = generateFilename(filename, format);
+
+        downloadFile(blob, downloadFilename);
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        setHasExported(true);
+        timeoutRef.current = setTimeout(() => {
+          setHasExported(false);
+          timeoutRef.current = null;
+        }, 2000);
+        onSuccess?.();
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error("Export failed");
+        onError?.(err);
+        throw err;
+      } finally {
+        setIsExporting(false);
+      }
+    })();
+
+    toast.promise(exportPromise, {
+      loading: `Preparing ${resource} export...`,
+      success: `${resource} exported successfully!`,
+      error: `Failed to export ${resource}.`,
+    });
+  }, [fetchData, filename, resource, format, isExporting, onSuccess, onError]);
+
+  const displayLabel = label ?? `Export ${format.toUpperCase()}`;
+
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      onClick={handleClick}
+      disabled={isExporting}
+      className={cn("inline-flex items-center gap-2", className)}
+    >
+      <AnimatePresence mode="wait">
+        {hasExported && !isExporting ? (
+          <motion.div
+            key="check"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Check className="h-4 w-4 shrink-0" />
+          </motion.div>
+        ) : showIcon ? (
+          <motion.div
+            key="download"
+            animate={{ y: isExporting ? [0, -2, 0] : 0 }}
+            transition={{ duration: 0.6, repeat: isExporting ? Infinity : 0 }}
+          >
+            <Download className="h-4 w-4 shrink-0" />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      {displayLabel && <span className="hidden sm:inline">{displayLabel}</span>}
+    </Button>
+  );
+}
+
+
+Now, integrate this component into your page:
+
+File location: app/page.tsx (or any page where you want export functionality)
+
+Instructions:
+1. Import ExportButton from "@/components/export-button"
+2. Import Toaster from "sonner" and add it to your layout
+3. Create a function that fetches your data and returns a Promise<unknown[]>
+4. Add the ExportButton component with the fetchData prop
+
+Example integration:
+
+```tsx
+"use client";
+
+import { ExportButton } from "@/components/export-button";
+
+async function fetchUsers() {
+  const response = await fetch("/api/users");
+  const data = await response.json();
+  return data; // Must return an array
+}
+
+export default function UsersPage() {
+  return (
+    <div>
+      <h1>Users</h1>
+      <ExportButton fetchData={fetchUsers} resource="users" />
+    </div>
+  );
+}
+```
+
+Also add Toaster to your layout:
+
+File location: app/layout.tsx
+
+```tsx
+import { Toaster } from "sonner";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
+    </html>
+  );
+}
+```
+
+Customization examples:
+
+Basic usage (CSV export):
+```tsx
+<ExportButton fetchData={fetchUsers} />
+```
+
+Export as JSON:
+```tsx
+<ExportButton fetchData={fetchUsers} format="json" />
+```
+
+Custom filename and resource:
+```tsx
+<ExportButton
+  fetchData={fetchUsers}
+  filename="users-export"
+  resource="users"
+/>
+```
+
+Custom label and styling:
+```tsx
+<ExportButton
+  fetchData={fetchUsers}
+  label="Download Users"
+  variant="default"
+  size="lg"
+/>
+```
+
+With callbacks:
+```tsx
+<ExportButton
+  fetchData={fetchUsers}
+  onSuccess={() => console.log("Exported!")}
+  onError={(error) => console.error("Error:", error)}
+/>
+```
+
+Complete example:
+```tsx
+<ExportButton
+  fetchData={fetchUsers}
+  format="csv"
+  filename="users-export"
+  resource="users"
+  label="Export Users"
+  variant="outline"
+  size="sm"
+  showIcon={true}
+  onSuccess={() => {
+    console.log("Export completed!");
+  }}
+/>
+```
+
+Important notes:
+- The fetchData function must return Promise<unknown[]>
+- Data must be an array of objects
+- File downloads automatically when export succeeds
+- Toast notifications show progress and result
+- Button shows loading state during export
+- Success checkmark appears briefly after export
+- CSV format handles booleans, dates, and numbers automatically
+- JSON format uses pretty printing (2-space indent)
+
+Testing:
+1. Click the export button
+2. Button should show loading state with animated icon
+3. Toast notification appears with "Preparing export..."
+4. File should download automatically
+5. Success toast appears: "exported successfully!"
+6. Checkmark icon appears briefly on button
+

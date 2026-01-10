@@ -33,6 +33,7 @@ import {
 import { toast } from "sonner";
 import type { GoodsInReceiptWithItems, GoodsInItem } from "../types";
 import { PlusIcon, TrashIcon } from "@phosphor-icons/react";
+import { StatefulButton } from "@/features/utilities/stateful-button";
 
 interface GoodsInFormProps {
   open: boolean;
@@ -96,38 +97,7 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountId) {
-      toast.error("Please select an account");
-      return;
-    }
-    if (items.length === 0) {
-      toast.error("Please add at least one item");
-      return;
-    }
-
-    try {
-      if (receipt) {
-        await updateGoodsIn.mutateAsync({
-          id: receipt.id,
-          account_id: accountId,
-          date,
-          notes: notes || undefined,
-          items,
-        });
-        toast.success("Goods In receipt updated successfully");
-      } else {
-        await createGoodsIn.mutateAsync({
-          account_id: accountId,
-          date,
-          notes: notes || undefined,
-          items,
-        });
-        toast.success("Goods In receipt created successfully");
-      }
-      onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save receipt");
-    }
+    // Form submission is now handled by StatefulButton
   };
 
   const isPending = createGoodsIn.isPending || updateGoodsIn.isPending;
@@ -315,9 +285,48 @@ export function GoodsInForm({ open, onOpenChange, receipt }: GoodsInFormProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || items.length === 0}>
-              {isPending ? "Saving..." : receipt ? "Update" : "Create"}
-            </Button>
+            <StatefulButton
+              type="submit"
+              disabled={items.length === 0}
+              onAction={async () => {
+                if (!accountId) {
+                  toast.error("Please select an account");
+                  return;
+                }
+                if (items.length === 0) {
+                  toast.error("Please add at least one item");
+                  return;
+                }
+
+                if (receipt) {
+                  await updateGoodsIn.mutateAsync({
+                    id: receipt.id,
+                    account_id: accountId,
+                    date,
+                    notes: notes || undefined,
+                    items,
+                  });
+                  toast.success("Goods In receipt updated successfully");
+                } else {
+                  await createGoodsIn.mutateAsync({
+                    account_id: accountId,
+                    date,
+                    notes: notes || undefined,
+                    items,
+                  });
+                  toast.success("Goods In receipt created successfully");
+                }
+                onOpenChange(false);
+              }}
+              onSuccess={() => {
+                // Success is already handled in onAction
+              }}
+              onError={(error) => {
+                toast.error(error.message || "Failed to save receipt");
+              }}
+            >
+              {receipt ? "Update" : "Create"}
+            </StatefulButton>
           </DialogFooter>
         </form>
       </DialogContent>

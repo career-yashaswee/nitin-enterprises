@@ -66,7 +66,7 @@ export function NavUser({
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
+            {/* <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
@@ -80,17 +80,11 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                {/* <Sparkles /> */}
-                Upgrade to Pro
-              </DropdownMenuItem>
+              <DropdownMenuItem>Upgrade to Pro</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                {/* <BadgeCheck /> */}
-                Account
-              </DropdownMenuItem>
+              <DropdownMenuItem>Account</DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />
                 Billing
@@ -100,7 +94,7 @@ export function NavUser({
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator /> */}
             <DropdownMenuItem onClick={onSignOut}>
               <SignOutIcon />
               Log out
