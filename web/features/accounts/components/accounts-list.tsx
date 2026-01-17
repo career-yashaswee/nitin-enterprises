@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   useReactTable,
   getCoreRowModel,
@@ -52,9 +53,10 @@ import { ExportButton } from "@/features/utilities/export-button";
 import { RefreshButton } from "@/features/utilities/refresh-button";
 import { useSearchInput } from "@/features/utilities/search-input";
 
-type FilterType = "all" | "to-collect" | "to-pay";
+type FilterType = "all" | "to-collect" | "to-pay" | "creditor" | "debitor";
 
 export function AccountsList() {
+  const router = useRouter();
   const { data: accounts, isLoading } = useAccounts();
   const { data: goodsIn } = useGoodsIn();
   const { data: goodsOut } = useGoodsOut();
@@ -99,6 +101,13 @@ export function AccountsList() {
 
     if (filter !== "all") {
       filtered = filtered.filter((account) => {
+        if (filter === "creditor") {
+          return account.type === "creditor";
+        }
+        if (filter === "debitor") {
+          return account.type === "debitor";
+        }
+        
         const balance = accountBalances.find((b) => b.accountId === account.id);
         if (!balance) return false;
 
@@ -174,12 +183,9 @@ export function AccountsList() {
               variant="ghost"
               size="icon"
               onClick={() => {
-                // Handle edit - will be passed to parent
-                const event = new CustomEvent("edit-account", {
-                  detail: row.original,
-                });
-                window.dispatchEvent(event);
+                router.push(`/accounts/${row.original.id}/edit`);
               }}
+              aria-label="Edit account"
             >
               <PencilIcon className="size-4" />
             </Button>
@@ -259,6 +265,8 @@ export function AccountsList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Accounts</SelectItem>
+                <SelectItem value="creditor">Creditors</SelectItem>
+                <SelectItem value="debitor">Debitors</SelectItem>
                 <SelectItem value="to-collect">Payments to Collect</SelectItem>
                 <SelectItem value="to-pay">Payments to Send</SelectItem>
               </SelectContent>

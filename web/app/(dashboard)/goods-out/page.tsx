@@ -1,44 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/features/auth/components/protected-route";
 import { GoodsOutList } from "@/features/goods-out/components/goods-out-list";
-import { GoodsOutForm } from "@/features/goods-out/components/goods-out-form";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@phosphor-icons/react";
-import type { GoodsOutReceiptWithItems } from "@/features/goods-out/types";
+import { useKeyboardShortcut } from "@/features/utilities/keyboard-shortcuts/hooks/use-keyboard-shortcut";
+import { getModifierKey } from "@/features/utilities/keyboard-shortcuts/hooks/use-platform";
+import { Kbd } from "@/components/ui/kbd";
 
 export default function GoodsOutPage() {
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingReceipt, setEditingReceipt] =
-    useState<GoodsOutReceiptWithItems | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    const handleEditGoodsOut = (
-      event: CustomEvent<GoodsOutReceiptWithItems>
-    ) => {
-      setEditingReceipt(event.detail);
-      setFormOpen(true);
-    };
-
-    window.addEventListener(
-      "edit-goods-out",
-      handleEditGoodsOut as EventListener
-    );
-    return () => {
-      window.removeEventListener(
-        "edit-goods-out",
-        handleEditGoodsOut as EventListener
-      );
-    };
-  }, []);
-
-  const handleFormClose = (open: boolean) => {
-    setFormOpen(open);
-    if (!open) {
-      setEditingReceipt(null);
-    }
+  const handleNewReceipt = () => {
+    router.push("/goods-out/new");
   };
+
+  // Keyboard shortcut: Ctrl/Cmd + N to create new receipt
+  useKeyboardShortcut("mod+n", handleNewReceipt);
 
   return (
     <ProtectedRoute>
@@ -50,17 +29,12 @@ export default function GoodsOutPage() {
               Record goods sold to accounts
             </p>
           </div>
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={handleNewReceipt}>
             <PlusIcon className="size-4" />
-            Add Receipt
+            Add Receipt <Kbd>{getModifierKey()}</Kbd>+<Kbd>N</Kbd>
           </Button>
         </div>
         <GoodsOutList />
-        <GoodsOutForm
-          open={formOpen}
-          onOpenChange={handleFormClose}
-          receipt={editingReceipt}
-        />
       </div>
     </ProtectedRoute>
   );

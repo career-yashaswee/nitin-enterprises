@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender, type ColumnDef } from '@tanstack/react-table';
 import { useGoodsOut, useDeleteGoodsOut } from '../hooks/use-goods-out';
 import { useRole } from '@/features/auth/hooks/use-role';
@@ -19,6 +20,7 @@ import { RefreshButton } from '@/features/utilities/refresh-button';
 import { useSearchInput } from '@/features/utilities/search-input';
 
 export function GoodsOutList() {
+  const router = useRouter();
   const { data: receipts, isLoading } = useGoodsOut();
   const { canDelete } = useRole();
   const deleteGoodsOut = useDeleteGoodsOut();
@@ -63,9 +65,9 @@ export function GoodsOutList() {
               variant="ghost"
               size="icon"
               onClick={() => {
-                const event = new CustomEvent('edit-goods-out', { detail: row.original });
-                window.dispatchEvent(event);
+                router.push(`/goods-out/${row.original.id}/edit`);
               }}
+              aria-label="Edit receipt"
             >
               <PencilIcon className="size-4" />
             </Button>

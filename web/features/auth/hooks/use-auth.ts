@@ -21,6 +21,9 @@ export function useAuth() {
       } = await supabase.auth.getSession();
       return session;
     },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   useEffect(() => {

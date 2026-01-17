@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/ui/theme-toggle";
 import { ScrollableBreadcrumb } from "@/features/utilities/scrollable-breadcrumbs";
 import type { BreadcrumbItem } from "@/features/utilities/scrollable-breadcrumbs/types";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useCallback } from "react";
 import {
   House,
@@ -23,6 +23,7 @@ import {
   Warehouse,
   Gear,
 } from "@phosphor-icons/react";
+import { useKeyboardShortcut } from "@/features/utilities/keyboard-shortcuts/hooks/use-keyboard-shortcut";
 
 const routeMap: Record<
   string,
@@ -41,11 +42,10 @@ const routeMap: Record<
 
 function BreadcrumbContent() {
   const pathname = usePathname();
-  const { state } = useSidebar();
 
   const handleSidebarChange = useCallback(() => {
     // This function will be recreated when state changes, triggering the scroll effect
-  }, [state]);
+  }, []);
 
   const breadcrumbItems = useMemo(() => {
     const items: BreadcrumbItem[] = [
@@ -105,6 +105,27 @@ function BreadcrumbContent() {
   );
 }
 
+function GlobalKeyboardShortcuts() {
+  const router = useRouter();
+  const { toggleSidebar } = useSidebar();
+
+  // Navigation shortcuts
+  useKeyboardShortcut("mod+1", () => router.push("/"));
+  useKeyboardShortcut("mod+2", () => router.push("/accounts"));
+  useKeyboardShortcut("mod+3", () => router.push("/goods-in"));
+  useKeyboardShortcut("mod+4", () => router.push("/goods-out"));
+  useKeyboardShortcut("mod+5", () => router.push("/payment-in"));
+  useKeyboardShortcut("mod+6", () => router.push("/payment-out"));
+  useKeyboardShortcut("mod+7", () => router.push("/inventory"));
+  useKeyboardShortcut("mod+8", () => router.push("/users"));
+  useKeyboardShortcut("mod+9", () => router.push("/settings"));
+
+  // Sidebar toggle
+  useKeyboardShortcut("mod+b", () => toggleSidebar());
+
+  return null;
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -114,6 +135,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
+        <GlobalKeyboardShortcuts />
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4 flex-1 min-w-0">
             <SidebarTrigger className="-ml-1" />

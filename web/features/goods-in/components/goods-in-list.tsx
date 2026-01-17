@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   useReactTable,
   getCoreRowModel,
@@ -39,6 +40,7 @@ import { RefreshButton } from '@/features/utilities/refresh-button';
 import { useSearchInput } from '@/features/utilities/search-input';
 
 export function GoodsInList() {
+  const router = useRouter();
   const { data: receipts, isLoading } = useGoodsIn();
   const { canDelete } = useRole();
   const deleteGoodsIn = useDeleteGoodsIn();
@@ -83,9 +85,9 @@ export function GoodsInList() {
               variant="ghost"
               size="icon"
               onClick={() => {
-                const event = new CustomEvent('edit-goods-in', { detail: row.original });
-                window.dispatchEvent(event);
+                router.push(`/goods-in/${row.original.id}/edit`);
               }}
+              aria-label="Edit receipt"
             >
               <PencilIcon className="size-4" />
             </Button>

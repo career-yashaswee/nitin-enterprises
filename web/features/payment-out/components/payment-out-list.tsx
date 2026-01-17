@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender, type ColumnDef } from '@tanstack/react-table';
 import { usePaymentOut, useDeletePaymentOut } from '../hooks/use-payment-out';
 import { useRole } from '@/features/auth/hooks/use-role';
@@ -18,6 +19,7 @@ import { RefreshButton } from '@/features/utilities/refresh-button';
 import { useSearchInput } from '@/features/utilities/search-input';
 
 export function PaymentOutList() {
+  const router = useRouter();
   const { data: payments, isLoading } = usePaymentOut();
   const { canDelete } = useRole();
   const deletePaymentOut = useDeletePaymentOut();
@@ -61,9 +63,9 @@ export function PaymentOutList() {
               variant="ghost"
               size="icon"
               onClick={() => {
-                const event = new CustomEvent('edit-payment-out', { detail: row.original });
-                window.dispatchEvent(event);
+                router.push(`/payment-out/${row.original.id}/edit`);
               }}
+              aria-label="Edit payment"
             >
               <PencilIcon className="size-4" />
             </Button>

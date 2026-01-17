@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import type { GoodsOutReceiptWithItems } from "../types";
 import type { PaymentInWithRelations } from "@/features/payment-in/types";
+import { amountToWords } from "@/lib/utils/amount-to-words";
 
 interface GoodsOutReceiptProps {
   receipt: GoodsOutReceiptWithItems;
@@ -169,6 +170,14 @@ export function GoodsOutReceipt({ receipt, payments, receiptId }: GoodsOutReceip
         >
           <p className="text-2xl font-bold" style={{ color: "#ffffff" }}>
             Total Amount: ₹{totalAmount.toFixed(2)}
+          </p>
+        </div>
+        <div className="mt-4 text-right">
+          <p className="text-sm font-medium" style={{ color: "#6b7280" }}>
+            Amount in Words:
+          </p>
+          <p className="text-base font-semibold mt-1" style={{ color: "#000000" }}>
+            {amountToWords(totalAmount)}
           </p>
         </div>
       </div>

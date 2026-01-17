@@ -1,44 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/features/auth/components/protected-route";
 import { PaymentOutList } from "@/features/payment-out/components/payment-out-list";
-import { PaymentOutForm } from "@/features/payment-out/components/payment-out-form";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@phosphor-icons/react";
-import type { PaymentOutWithRelations } from "@/features/payment-out/types";
+import { useKeyboardShortcut } from "@/features/utilities/keyboard-shortcuts/hooks/use-keyboard-shortcut";
+import { getModifierKey } from "@/features/utilities/keyboard-shortcuts/hooks/use-platform";
+import { Kbd } from "@/components/ui/kbd";
 
 export default function PaymentOutPage() {
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingPayment, setEditingPayment] =
-    useState<PaymentOutWithRelations | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    const handleEditPaymentOut = (
-      event: CustomEvent<PaymentOutWithRelations>
-    ) => {
-      setEditingPayment(event.detail);
-      setFormOpen(true);
-    };
-
-    window.addEventListener(
-      "edit-payment-out",
-      handleEditPaymentOut as EventListener
-    );
-    return () => {
-      window.removeEventListener(
-        "edit-payment-out",
-        handleEditPaymentOut as EventListener
-      );
-    };
-  }, []);
-
-  const handleFormClose = (open: boolean) => {
-    setFormOpen(open);
-    if (!open) {
-      setEditingPayment(null);
-    }
+  const handleNewPayment = () => {
+    router.push("/payment-out/new");
   };
+
+  useKeyboardShortcut("mod+n", handleNewPayment);
 
   return (
     <ProtectedRoute>
@@ -50,17 +28,12 @@ export default function PaymentOutPage() {
               Record payments made to accounts
             </p>
           </div>
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={handleNewPayment}>
             <PlusIcon className="size-4" />
-            Add Payment
+            Add Payment <Kbd>{getModifierKey()}</Kbd>+<Kbd>N</Kbd>
           </Button>
         </div>
         <PaymentOutList />
-        <PaymentOutForm
-          open={formOpen}
-          onOpenChange={handleFormClose}
-          payment={editingPayment}
-        />
       </div>
     </ProtectedRoute>
   );

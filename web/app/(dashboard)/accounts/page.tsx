@@ -1,38 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/features/auth/components/protected-route";
 import { AccountsList } from "@/features/accounts/components/accounts-list";
-import { AccountForm } from "@/features/accounts/components/account-form";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@phosphor-icons/react";
-import type { Account } from "@/features/accounts/types";
+import { useKeyboardShortcut } from "@/features/utilities/keyboard-shortcuts/hooks/use-keyboard-shortcut";
+import { getModifierKey } from "@/features/utilities/keyboard-shortcuts/hooks/use-platform";
+import { Kbd } from "@/components/ui/kbd";
 
 export default function AccountsPage() {
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    const handleEditAccount = (event: CustomEvent<Account>) => {
-      setEditingAccount(event.detail);
-      setFormOpen(true);
-    };
-
-    window.addEventListener("edit-account", handleEditAccount as EventListener);
-    return () => {
-      window.removeEventListener(
-        "edit-account",
-        handleEditAccount as EventListener
-      );
-    };
-  }, []);
-
-  const handleFormClose = (open: boolean) => {
-    setFormOpen(open);
-    if (!open) {
-      setEditingAccount(null);
-    }
+  const handleNewAccount = () => {
+    router.push("/accounts/new");
   };
+
+  useKeyboardShortcut("mod+n", handleNewAccount);
 
   return (
     <ProtectedRoute>
@@ -44,17 +28,12 @@ export default function AccountsPage() {
               Manage your accounts
             </p>
           </div>
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={handleNewAccount}>
             <PlusIcon className="size-4" />
-            Add Account
+            Add Account <Kbd>{getModifierKey()}</Kbd>+<Kbd>N</Kbd>
           </Button>
         </div>
         <AccountsList />
-        <AccountForm
-          open={formOpen}
-          onOpenChange={handleFormClose}
-          account={editingAccount}
-        />
       </div>
     </ProtectedRoute>
   );
